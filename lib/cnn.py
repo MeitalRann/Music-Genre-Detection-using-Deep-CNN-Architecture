@@ -6,6 +6,7 @@ import glob
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.optimizers import Adam
+import get_images as get_images
 
 
 # set seed:
@@ -67,27 +68,39 @@ def main(mode, n_classes, im_size, prj_dir, feat_dir, classes, batch_size=50):
     train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
         featurewise_center=True,
         featurewise_std_normalization=True)
+
+    valid_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+        featurewise_center=True,
+        featurewise_std_normalization=True)
+
+    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+        featurewise_center=True,
+        featurewise_std_normalization=True)
+
+    images = get_images.main(feat_dir+r'\\train')
+    train_datagen.fit(images)
+    valid_datagen.fit(images)
+    test_datagen.fit(images)
+    del images
+
     train_batches = train_datagen.flow_from_directory(feat_dir+r'\\train',
                                                       target_size=im_size,
                                                       batch_size=batch_size,
                                                       classes=classes)
-    valid_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        featurewise_center=True,
-        featurewise_std_normalization=True)
+
     valid_batches = valid_datagen.flow_from_directory(feat_dir + r'\\valid',
                                                       target_size=im_size,
                                                       batch_size=batch_size,
                                                       classes=classes)
-    test_datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-        featurewise_center=True,
-        featurewise_std_normalization=True)
+
     test_batches = test_datagen.flow_from_directory(feat_dir + r'\\test',
                                                       target_size=im_size,
                                                       batch_size=batch_size,
                                                       classes=classes,
                                                       shuffle=False)
-    true_test = test_batches.classes
 
+    true_test = test_batches.classes
+    test_names = test_batches.filenames
     # create log folder if not exists:
     if not os.path.exists(prj_dir + r'\\logs\\'):
         os.makedirs(prj_dir + r'\\logs\\')
@@ -117,4 +130,4 @@ def main(mode, n_classes, im_size, prj_dir, feat_dir, classes, batch_size=50):
         print('Start Testing...')
         pred = model.predict(x=test_batches, verbose=0)
         print('Done testing!')
-    return pred, true_test
+    return pred, true_test, test_names
