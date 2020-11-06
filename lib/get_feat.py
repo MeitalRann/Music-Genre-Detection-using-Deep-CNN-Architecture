@@ -31,7 +31,7 @@ def getListOfFiles(dirName):
 
     return allFiles
 
-def log_spec(data, n_fft=2048, hop_length=512, n_mels=204, m = 1, ):
+def log_spec(data, n_fft=2048, hop_length=512, n_mels=128, m = 1, ):
     if m == 0:
         # Calculate the spectrogram as the square of the complex magnitude of the STFT
         spectrogram = np.abs(librosa.stft(data, n_fft=n_fft, hop_length=hop_length, win_length=n_fft, window='hann')) ** 2
@@ -39,7 +39,8 @@ def log_spec(data, n_fft=2048, hop_length=512, n_mels=204, m = 1, ):
         out = spectrogram_db
     else:
         # calculate the mel-spectrogram
-        melspectrogram = librosa.feature.melspectrogram(data, n_fft=n_fft,hop_length=hop_length, n_mels=n_mels)
+        melspectrogram = librosa.feature.melspectrogram(data, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels)
+        melspectrogram = librosa.power_to_db(melspectrogram, ref=np.max)
         out = melspectrogram
     return out
 
@@ -73,6 +74,7 @@ def feat_extract(data_dir, out_dir, labels_names, size=(204,204)):
     train_lim = round(0.7*n_files)  # number of files to place in train (70%)
     valid_lim = train_lim + round(0.2*n_files) # number of files to place in valid (20%)
 
+    test_files = []
     for i in tqdm(range(len(all_files))):
         # Load sample audio file
         file_i = all_files[i]
@@ -93,6 +95,7 @@ def feat_extract(data_dir, out_dir, labels_names, size=(204,204)):
                 name = valid_dir + r'\\' + label + r'\\spectrogram_' + str(i) + '_' + str(j) + '.png'
             else:
                 name = test_dir + r'\\' + label + r'\\spectrogram_' + str(i) + '_' + str(j) + '.png'
+                test_files.append(name)
             plt.imsave(name, sub_feat)
         # librosa.display.specshow(feat, sr=sr, y_axis='log', x_axis='time', hop_length=hop_length)
         # plt.title('Power spectrogram')

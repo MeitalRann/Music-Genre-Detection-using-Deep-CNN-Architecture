@@ -21,9 +21,9 @@ sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=sessi
 tf.compat.v1.keras.backend.set_session(sess)
 
 
-def create_model(n_classes):
+def create_model(n_classes, input_shape):
     model = keras.Sequential(
-        [keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='valid', input_shape=(204, 204, 3)),
+        [keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='valid', input_shape=input_shape),
          keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
          keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='valid'),
          keras.layers.MaxPool2D(pool_size=(2, 2), strides=2),
@@ -48,8 +48,8 @@ def create_model(n_classes):
     return model
 
 
-def train(log_dir, checkpoint_dir, n_classes, train_batches, valid_batches):
-        model = create_model(n_classes)
+def train(log_dir, checkpoint_dir, n_classes, train_batches, valid_batches, input_shape):
+        model = create_model(n_classes, input_shape)
         model.summary()
 
         my_callbacks = [
@@ -110,10 +110,11 @@ def main(mode, n_classes, im_size, prj_dir, feat_dir, classes, batch_size=50):
 
     log_dir = prj_dir + r"\\logs\\" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     checkpoint_dir = prj_dir + r".\\model\\model.{epoch:02d}-{val_loss:.2f}.h5"
+    input_shape = (im_size[0], im_size[1], 3)
 
     if mode is "train":
         print('Start training...')
-        model = train(log_dir, checkpoint_dir, n_classes, train_batches, valid_batches)
+        model = train(log_dir, checkpoint_dir, n_classes, train_batches, valid_batches, input_shape)
         print('Done training!')
         print('Start Testing...')
         pred = model.predict(x=test_batches, verbose=0)
@@ -124,7 +125,7 @@ def main(mode, n_classes, im_size, prj_dir, feat_dir, classes, batch_size=50):
         list_of_files = glob.glob(prj_dir + r'\model\*')  # * means all if need specific format then *.csv
         latest = max(list_of_files, key=os.path.getctime)
         # Create a new model instance
-        model = create_model(n_classes)
+        model = create_model(n_classes, input_shape)
         # Load the previously saved weights
         model.load_weights(latest)
         print('Start Testing...')
