@@ -31,8 +31,8 @@ def main(dir):
     random.shuffle(all_files)
     n = len(all_files)
     data = []
-    # sub sample 1/4 of the database
-    for i in range(n//4):
+    # sub sample 1/3 of the database
+    for i in range(n//3):
         im = imread(all_files[i])[:,:,:3]
         data.append(im)
     return data
